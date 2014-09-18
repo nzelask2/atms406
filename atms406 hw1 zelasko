@@ -1,0 +1,533 @@
+%matplotlib inline
+import netCDF4
+from mpl_toolkits.basemap import Basemap, shiftgrid
+from netCDF4 import Dataset, date2index
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_omega.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+levvar = dataset.variables['LEV']
+
+print levvar[:]
+print timevar[:]
+
+timeindex = 0 # find time index for desired date.
+presindex = 6
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+omega = dataset.variables['omega'][timeindex,presindex,:,:].squeeze()
+u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+v = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,omega,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Omega and wind analysis for 500 hPa January')
+m.drawcoastlines()
+plt.show()
+
+np.shape(omega)
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_omega.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+levvar = dataset.variables['LEV']
+
+print levvar[:]
+print timevar[:]
+
+timeindex = 6 # find time index for desired date.
+presindex = 6
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+omega = dataset.variables['omega'][timeindex,presindex,:,:].squeeze()
+u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+v = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,omega,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Omega and wind analysis for 500 hPa July')
+m.drawcoastlines()
+plt.show()
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_rhum.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+levvar = dataset.variables['LEV']
+
+print levvar[:]
+print timevar[:]
+
+timeindex = 0 # find time index for desired date.
+presindex = 5
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+rhum = dataset.variables['rhum'][timeindex,presindex,:,:].squeeze()
+u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+v = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,rhum,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Relative Humidity and wind analysis for 850 hPa in Janaury')
+m.drawcoastlines()
+plt.show()
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_rhum.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+levvar = dataset.variables['LEV']
+
+print levvar[:]
+print timevar[:]
+
+timeindex = 6 # find time index for desired date.
+presindex = 5
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+rhum = dataset.variables['rhum'][timeindex,presindex,:,:].squeeze()
+u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+v = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,rhum,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Relative Humidity and wind analysis for 850 hPa in July')
+m.drawcoastlines()
+plt.show()
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_surface_gauss_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_surface_gauss_shtfl.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+#levvar = dataset.variables['LEV']
+
+#print levvar[:]
+print timevar[:]
+
+timeindex = 0 # find time index for desired date.
+#presindex = 5
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+shtfl = dataset.variables['shtfl'][timeindex,:,:].squeeze()
+#u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+#v# = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,shtfl,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+#urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+#Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+#qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Surface Sensible Heat Flux for January')
+m.drawcoastlines()
+plt.show()
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_surface_gauss_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_surface_gauss_shtfl.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+#levvar = dataset.variables['LEV']
+
+#print levvar[:]
+print timevar[:]
+
+timeindex = 6 # find time index for desired date.
+#presindex = 5
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+shtfl = dataset.variables['shtfl'][timeindex,:,:].squeeze()
+#u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+#v# = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,shtfl,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+#urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+#Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+#qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Surface Sensible Heat Flux for July')
+m.drawcoastlines()
+plt.show()
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_surface_gauss_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_surface_gauss_lhtfl.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+#levvar = dataset.variables['LEV']
+
+#print levvar[:]
+print timevar[:]
+
+timeindex = 0 # find time index for desired date.
+#presindex = 5
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+lhtfl = dataset.variables['lhtfl'][timeindex,:,:].squeeze()
+#u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+#v# = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,lhtfl,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+#urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+#Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+#qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Surface Latent Heat Flux for January')
+m.drawcoastlines()
+plt.show()
+
+# load data from Hawaii
+url = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_surface_gauss_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_surface_gauss_lhtfl.jnl'# create a dataset object
+dataset = netCDF4.Dataset(url)
+
+url2 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_uwnd.jnl'# create a dataset object
+dataset2 = netCDF4.Dataset(url2)
+
+url3 = 'http://apdrc.soest.hawaii.edu/thredds/dodsC/las/ncep_mon_pressure_clima/data_apdrc.soest.hawaii.edu_dods_public_data_Reanalysis_Data_NCEP_NCEP_clima_pressure_vwnd.jnl'# create a dataset object
+dataset3 = netCDF4.Dataset(url3)
+
+#load data in file
+timevar = dataset.variables['TIME']
+#levvar = dataset.variables['LEV']
+
+#print levvar[:]
+print timevar[:]
+
+timeindex = 6 # find time index for desired date.
+#presindex = 5
+# read sst.  Will automatically create a masked array using
+# missing_value variable attribute. 'squeeze out' singleton dimensions.
+lhtfl = dataset.variables['lhtfl'][timeindex,:,:].squeeze()
+#u = dataset2.variables['uwnd'][timeindex,presindex,:,:].squeeze()
+#v# = dataset3.variables['vwnd'][timeindex,presindex,:,:].squeeze()
+
+lats = dataset.variables['LAT'][:]
+lons = dataset.variables['LON'][:]
+lons, lats = np.meshgrid(lons,lats)
+# create figure, axes instances.
+fig = plt.figure(figsize=(11,8.5))
+ax = fig.add_axes([0.05,0.05,0.9,0.9])
+# create Basemap instance.
+# coastlines not used, so resolution set to None to skip
+# continent processing (this speeds things up a bit)
+m =\
+Basemap(llcrnrlon=0,llcrnrlat=-50,urcrnrlon=360,urcrnrlat=50,projection='mill')
+# draw line around map projection limb.
+# color background of map projection region.
+# missing values over land will show up this color.
+m.drawmapboundary(fill_color='0.3')
+# plot sst, then ice with pcolor
+im1 = m.pcolormesh(lons,lats,lhtfl,shading='flat',cmap=plt.cm.jet,latlon=True)
+# plot wind vectors on projection grid.
+# first, shift grid so it goes from -180 to 180 (instead of 0 to 360
+# in longitude).  Otherwise, interpolation is messed up.
+#ugrid,newlons = shiftgrid(180.,u,lons,start=False)
+#vgrid,newlons = shiftgrid(180.,v,lons,start=False)
+# transform vectors to projection grid.
+#urot,vrot,x,y = m.rotate_vector(u[::2,::2],v[::2,::2],lons[::2,::2],lats[::2,::2],returnxy=True)
+# now plot.
+#Q = m.quiver(x,y,urot,vrot) #or specify, e.g., width=0.003, scale=400)
+#qk = plt.quiverkey(Q, 0.95, 1.05, 25, '25 m/s', labelpos='W')
+
+
+m.drawparallels(np.arange(-90.,99.,30.),labels=[1,1,0,0])
+m.drawmeridians(np.arange(-180.,180.,60.),labels=[1,0,0,1])
+# add colorbar
+cb = m.colorbar(im1,"bottom", size="5%", pad="17%")
+# add a title.
+ax.set_title('Surface Latent Heat Flux for July')
+m.drawcoastlines()
+plt.show()
+
+#5 
+# There is not a connection between 500 hPa winds and 850 hPa RH. However, there is a 
+# connection between omega and RH. Looking at the graphs for omega and RH, areas with high values of RH 
+# are generally in regions with negative omega. This makes sense because negative omega indicates ascent.
+# Ascent is favorable for the production of clouds and the presence of clouds generally indicates 
+# high RH values. Even though this makes sense, I can't logically think of a way that 500 hPa winds 
+# are related to 850 hPa values.
+
+#6
+# We know that there is a clear relationship between omega and RH from the previous question.
+# But, how are these related to sensible and surface heat fluxes? In areas like Australia in January,
+# there is not a large latent heat flux. Latent heat is associated with a change of state of a
+# substance. When air rises, air cools, condenses, and creates clouds. Clouds are associated with 
+# this phase change. However, there are low RH values in Australia, meaning clouds are probably less
+# likely to form and therefore no change of phase -> low latent heat flux. As for sensible heat flux, 
+# there will be a high sensible heat flux when radiation from the sun can be absorbed by the 
+# ground. This radiation can be absorbed when there is an absence of clouds or low RH. As you can see
+# from the maps, Australia has a low RH for January and a high sensible heat flux which confirms our
+# logic.
